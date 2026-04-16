@@ -35,7 +35,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
                 # Smarter conversation flow
 
-                if "AI" in user_speech or "Human" in user_speech:
+                elif "AI" in user_speech or "Human" in user_speech:
                     reply = "I'm AI. I can answer your question, and help you to setup your appointment nedds."
 
                 if any(word in user_speech for word in ["build", "built", "create", "created", "develop", "made", "make"]):
