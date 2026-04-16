@@ -28,6 +28,7 @@ async def websocket_endpoint(websocket: WebSocket):
     booking_state = {
         "intent": None,
         "service": None,
+        "day": None,
         "time": None,
         "name": None,
         "phone": None,
@@ -39,14 +40,13 @@ async def websocket_endpoint(websocket: WebSocket):
             data = await websocket.receive_text()
             msg = json.loads(data)
 
-           if msg["type"] == "prompt":
+      if msg["type"] == "prompt":
                 user_speech = msg["voicePrompt"].lower()
 
                 if booking_state["step"] is None:
                     if "book" in user_speech or "appointment" in user_speech:
                         booking_state["intent"] = "booking"
 
-                        # Detect long sentence → slow user down
                         if any(word in user_speech for word in [
                             "tomorrow", "today", "monday", "tuesday", "wednesday",
                             "thursday", "friday", "saturday", "sunday",
@@ -61,7 +61,6 @@ async def websocket_endpoint(websocket: WebSocket):
                     elif any(word in user_speech for word in ["pedicure", "manicure", "eyebrow", "lip", "chin", "waxing"]):
                         booking_state["intent"] = "booking"
 
-                        # If they gave too much info early → reset cleanly
                         if any(word in user_speech for word in [
                             "tomorrow", "today", "monday", "tuesday", "wednesday",
                             "thursday", "friday", "saturday", "sunday",
@@ -95,7 +94,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     reply = f"I heard {booking_state['service']}. Is that correct?"
 
                 elif booking_state["step"] == "confirm_service":
-                    if "yes" in user_speech or "correct" in user_speech or "right" in user_speech:
+                    if any(word in user_speech for word in ["yes", "correct", "right", "yeah", "yep"]):
                         booking_state["step"] = "ask_day"
                         reply = "Great. What day would you like to come in?"
                     else:
@@ -108,7 +107,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     reply = f"I heard {booking_state['day']}. Is that correct?"
 
                 elif booking_state["step"] == "confirm_day":
-                    if "yes" in user_speech or "correct" in user_speech or "right" in user_speech:
+                    if any(word in user_speech for word in ["yes", "correct", "right", "yeah", "yep"]):
                         booking_state["step"] = "ask_time"
                         reply = "What time would you like?"
                     else:
@@ -121,7 +120,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     reply = f"I heard {booking_state['time']}. Is that correct?"
 
                 elif booking_state["step"] == "confirm_time":
-                    if "yes" in user_speech or "correct" in user_speech or "right" in user_speech:
+                    if any(word in user_speech for word in ["yes", "correct", "right", "yeah", "yep"]):
                         booking_state["step"] = "ask_name"
                         reply = "Thank you. May I have your name?"
                     else:
@@ -134,7 +133,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     reply = f"I heard {booking_state['name']}. Is that correct?"
 
                 elif booking_state["step"] == "confirm_name":
-                    if "yes" in user_speech or "correct" in user_speech or "right" in user_speech:
+                    if any(word in user_speech for word in ["yes", "correct", "right", "yeah", "yep"]):
                         booking_state["step"] = "ask_phone"
                         reply = "What is the best phone number for this appointment?"
                     else:
@@ -147,7 +146,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     reply = f"I heard {booking_state['phone']}. Is that correct?"
 
                 elif booking_state["step"] == "confirm_phone":
-                    if "yes" in user_speech or "correct" in user_speech or "right" in user_speech:
+                    if any(word in user_speech for word in ["yes", "correct", "right", "yeah", "yep"]):
                         booking_state["step"] = "anything_else"
                         reply = (
                             f"Perfect. I have your booking request for {booking_state['service']} "
@@ -161,9 +160,10 @@ async def websocket_endpoint(websocket: WebSocket):
                         reply = "Okay. Please say your phone number again."
 
                 elif booking_state["step"] == "anything_else":
-                    if any(word in user_speech for word in [
-                        "no", "nope", "that's it", "that is it", "that's all",
-                        "that is all", "all set", "nothing else", "no thanks"
+                    if any(phrase in user_speech for phrase in [
+                        "no", "nope", "that's it", "that is it", "thats it",
+                        "that's all", "that is all", "thats all", "all set",
+                        "nothing else", "no thanks", "thank you", "thanks"
                     ]):
                         reply = "Thank you for calling Healthy Nails and Spa. Goodbye."
                         await websocket.send_text(json.dumps({
@@ -178,13 +178,14 @@ async def websocket_endpoint(websocket: WebSocket):
                         reply = "Of course. How else can I help you today?"
 
                 else:
-                    reply = "Your booking request has already been recorded. Is there anything else I can help you with?"
+                    booking_state["step"] = None
+                    reply = "I can help you book an appointment, check business hours, or assist with your visit. What would you like to do?"
 
                 await websocket.send_text(json.dumps({
                     "type": "text",
                     "token": reply,
                     "last": True
-                }))
+                }))     
 
     except:
         await websocket.close()
