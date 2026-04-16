@@ -34,6 +34,13 @@ async def websocket_endpoint(websocket: WebSocket):
                 user_speech = msg["voicePrompt"].lower()
 
                 # Smarter conversation flow
+
+                if "AI" in user_speech or "Human" in user_speech:
+                    reply = "I'm AI. I can answer your question, and help you to setup your appointment nedds."
+
+                if any(word in user_speech for word in ["build", "built", "create", "created", "develop", "made", "make"]):
+                    reply = "My master, he train and treat me very well. His name is Hanh Dang, I called him is Henry"                    
+
                 if "pedicure" in user_speech or "manicure" in user_speech:
                     reply = "Great choice. What day and time would you like to come in?"
 
