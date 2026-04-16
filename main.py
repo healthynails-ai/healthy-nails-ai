@@ -47,6 +47,9 @@ async def websocket_endpoint(websocket: WebSocket):
                 elif "book" in user_speech or "appointment" in user_speech:
                     reply = "Sure, what service are you looking for and what time works best for you?"
 
+                elif "ai" in user_speech or "human" in user_speech:
+                    reply = "I'm AI. I can answer your question, and help you to setup your appointment needs."
+
                 elif "close" in user_speech or "hours" in user_speech:
                     reply = "We are open Monday through Friday from 10 AM to 7 PM, Saturday from 9 AM to 6:30 PM, and Sunday from 10 AM to 6 PM."
 
