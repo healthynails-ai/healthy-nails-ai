@@ -13,7 +13,7 @@ async def incoming_call():
     
     connect = Connect()
     connect.conversation_relay(
-        url="wss://reflux-cilantro-festive.ngrok-free.dev/ws",
+        url="wss://healthy-nails-ai.onrender.com/ws",
         welcomeGreeting=WELCOME_MESSAGE
     )
     
