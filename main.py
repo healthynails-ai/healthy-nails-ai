@@ -25,6 +25,15 @@ async def incoming_call():
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
 
+    booking_state = {
+        "intent": None,
+        "service": None,
+        "time": None,
+        "name": None,
+        "phone": None,
+        "step": None
+    }
+
     try:
         while True:
             data = await websocket.receive_text()
@@ -33,33 +42,61 @@ async def websocket_endpoint(websocket: WebSocket):
             if msg["type"] == "prompt":
                 user_speech = msg["voicePrompt"].lower()
 
-                # Smarter conversation flow
-                if "ai" in user_speech or "human" in user_speech:
-                    reply = "I'm AI. I can answer your questions and help set up your appointment needs."
+                # Start booking flow
+                if booking_state["step"] is None:
+                    if "book" in user_speech or "appointment" in user_speech:
+                        booking_state["intent"] = "booking"
+                        booking_state["step"] = "ask_service"
+                        reply = "Sure. What service would you like to book?"
 
-                elif any(word in user_speech for word in ["build", "built", "create", "created", "develop", "developed", "made", "make"]):
-                    reply = "My master trained and treated me very well. His name is Hanh Dang, and I call him Henry."
+                    elif any(word in user_speech for word in ["pedicure", "manicure", "eyebrow", "lip", "chin", "waxing"]):
+                        booking_state["intent"] = "booking"
+                        booking_state["service"] = user_speech
+                        booking_state["step"] = "ask_time"
+                        reply = "Great. What day and time would you like to come in?"
 
-                elif "pedicure" in user_speech or "manicure" in user_speech:
-                    reply = "Great choice. What day and time would you like to come in?"
+                    elif "close" in user_speech or "hours" in user_speech:
+                        reply = "We are open Monday through Friday from 10 AM to 7 PM, Saturday from 9 AM to 6:30 PM, and Sunday from 10 AM to 6 PM."
 
-                elif "book" in user_speech or "appointment" in user_speech:
-                    reply = "Sure, what service are you looking for and what time works best for you?"
+                    elif "late" in user_speech:
+                        reply = "No problem at all. May I have your name and appointment time so we can notify the team?"
 
-                elif "close" in user_speech or "hours" in user_speech:
-                    reply = "We are open Monday through Friday from 10 AM to 7 PM, Saturday from 9 AM to 6:30 PM, and Sunday from 10 AM to 6 PM."
+                    elif "cancel" in user_speech or "reschedule" in user_speech:
+                        reply = "I can help with that. Can you tell me your name and your appointment time and phone number?"
 
-                elif "late" in user_speech:
-                    reply = "No problem at all. May I have your name and appointment time so we can notify the team?"
+                    elif any(word in user_speech for word in ["price", "cost", "how much", "charge"]):
+                        reply = "Prices vary by service. What service are you interested in?"
 
-                elif "cancel" in user_speech or "reschedule" in user_speech:
-                    reply = "I can help with that. Can you tell me your name and your appointment time and phone number?"
+                    else:
+                        reply = "I can help you book an appointment, check business hours, or assist with your visit. What would you like to do?"
 
-                elif "price" in user_speech:
-                    reply = "Prices vary by service. I can help you book or you can check full pricing on our website."
+                elif booking_state["step"] == "ask_service":
+                    booking_state["service"] = user_speech
+                    booking_state["step"] = "ask_time"
+                    reply = "Great. What day and time would you like to come in?"
+
+                elif booking_state["step"] == "ask_time":
+                    booking_state["time"] = user_speech
+                    booking_state["step"] = "ask_name"
+                    reply = "Thank you. May I have your name?"
+
+                elif booking_state["step"] == "ask_name":
+                    booking_state["name"] = msg["voicePrompt"]
+                    booking_state["step"] = "ask_phone"
+                    reply = "Thanks. What is the best phone number for this appointment?"
+
+                elif booking_state["step"] == "ask_phone":
+                    booking_state["phone"] = msg["voicePrompt"]
+                    booking_state["step"] = "complete"
+                    reply = (
+                        f"Perfect. I have your booking request for {booking_state['service']} "
+                        f"at {booking_state['time']} under {booking_state['name']} "
+                        f"with phone number {booking_state['phone']}. "
+                        f"A team member will confirm your appointment soon."
+                    )
 
                 else:
-                    reply = "I can help you book an appointment, check business hours, or assist with your visit. What would you like to do?"
+                    reply = "Your booking request has already been recorded. Is there anything else I can help you with?"
 
                 await websocket.send_text(json.dumps({
                     "type": "text",
