@@ -34,21 +34,17 @@ async def websocket_endpoint(websocket: WebSocket):
                 user_speech = msg["voicePrompt"].lower()
 
                 # Smarter conversation flow
+                if "ai" in user_speech or "human" in user_speech:
+                    reply = "I'm AI. I can answer your questions and help set up your appointment needs."
 
-                elif "AI" in user_speech or "Human" in user_speech:
-                    reply = "I'm AI. I can answer your question, and help you to setup your appointment nedds."
+                elif any(word in user_speech for word in ["build", "built", "create", "created", "develop", "developed", "made", "make"]):
+                    reply = "My master trained and treated me very well. His name is Hanh Dang, and I call him Henry."
 
-                if any(word in user_speech for word in ["build", "built", "create", "created", "develop", "made", "make"]):
-                    reply = "My master, he train and treat me very well. His name is Hanh Dang, I called him is Henry"                    
-
-                if "pedicure" in user_speech or "manicure" in user_speech:
+                elif "pedicure" in user_speech or "manicure" in user_speech:
                     reply = "Great choice. What day and time would you like to come in?"
 
                 elif "book" in user_speech or "appointment" in user_speech:
                     reply = "Sure, what service are you looking for and what time works best for you?"
-
-                elif "ai" in user_speech or "human" in user_speech:
-                    reply = "I'm AI. I can answer your question, and help you to setup your appointment needs."
 
                 elif "close" in user_speech or "hours" in user_speech:
                     reply = "We are open Monday through Friday from 10 AM to 7 PM, Saturday from 9 AM to 6:30 PM, and Sunday from 10 AM to 6 PM."
