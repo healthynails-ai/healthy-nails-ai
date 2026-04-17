@@ -25,6 +25,8 @@ async def incoming_call():
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
 
+    import asyncio  # needed for delay before hangup
+
     booking_state = {
         "intent": None,
         "service": None,
@@ -171,6 +173,7 @@ async def websocket_endpoint(websocket: WebSocket):
                             "token": reply,
                             "last": True
                         }))
+                        await asyncio.sleep(3)
                         await websocket.close()
                         break
                     else:
