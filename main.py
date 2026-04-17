@@ -40,7 +40,7 @@ async def websocket_endpoint(websocket: WebSocket):
             data = await websocket.receive_text()
             msg = json.loads(data)
 
-      if msg["type"] == "prompt":
+            if msg["type"] == "prompt":
                 user_speech = msg["voicePrompt"].lower()
 
                 if booking_state["step"] is None:
@@ -185,7 +185,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     "type": "text",
                     "token": reply,
                     "last": True
-                }))     
+                }))
 
     except:
         await websocket.close()
